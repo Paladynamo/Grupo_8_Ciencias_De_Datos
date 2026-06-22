@@ -1,0 +1,53 @@
+services:
+  etl-download:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    command: python -m etl.extract.download_kaggle
+    env_file:
+      - .env.example
+    volumes:
+      - ./data:/app/data
+
+  etl-transform:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    command: python -m etl.transform.pipeline
+    env_file:
+      - .env.example
+    volumes:
+      - ./data:/app/data
+
+  tests:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    command: python -m pytest
+    env_file:
+      - .env.example
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    env_file:
+      - .env.example
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    command: streamlit run dashboard/app.py --server.address 0.0.0.0 --server.port 8501
+    env_file:
+      - .env.example
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - api
